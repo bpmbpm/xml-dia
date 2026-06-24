@@ -5,8 +5,6 @@
 
 ### run
 
-- Основной запуск на GitHub Pages через корень проекта:
-  https://bpmbpm.github.io/xml-dia/
 - Прямой запуск текущей версии на GitHub Pages:
   https://bpmbpm.github.io/xml-dia/ver1/index.html
 - Запуск сохраненной схемы через URL: откройте приложение, загрузите или вставьте XML,
