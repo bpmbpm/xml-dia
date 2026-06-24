@@ -1,0 +1,76 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8">
+  <title>xml-dia tests</title>
+  <style>
+    body { font-family: Arial, sans-serif; margin: 24px; }
+    .pass { color: #0b6b2f; }
+    .fail { color: #a93131; }
+  </style>
+</head>
+<body>
+  <h1>xml-dia tests</h1>
+  <pre id="result"></pre>
+  <textarea id="xmlEditor"></textarea>
+  <div id="diagramCanvas"></div>
+  <pre id="logOutput"></pre>
+  <button id="renderButton"></button>
+  <button id="saveXmlButton"></button>
+  <button id="copyUrlButton"></button>
+  <button id="externalViewerButton"></button>
+  <button id="exportSvgButton"></button>
+  <button id="exportPngButton"></button>
+  <button id="exportPdfButton"></button>
+  <button id="zoomOutButton"></button>
+  <button id="zoomInButton"></button>
+  <button id="zoomResetButton"></button>
+  <button id="fitButton"></button>
+  <button id="panLeftButton"></button>
+  <button id="panRightButton"></button>
+  <button id="panUpButton"></button>
+  <button id="panDownButton"></button>
+  <select id="exampleSelect"></select>
+  <select id="externalViewerSelect"><option value="bpmn-io"></option></select>
+  <input id="fileInput" type="file">
+  <script>window.XmlDiaSkipAutoInit = true;</script>
+  <script src="../app.js"></script>
+  <script>
+    (async function () {
+      const result = document.getElementById('result');
+      const tests = [];
+      function test(name, fn) { tests.push({ name, fn }); }
+      function assert(value, message) { if (!value) throw new Error(message); }
+
+      test('detects BPMN', function () {
+        const xml = '<bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL"></bpmn:definitions>';
+        assert(XmlDia.detectFormat(xml).name === 'bpmn', 'BPMN не распознан');
+      });
+      test('detects draw.io', function () {
+        assert(XmlDia.detectFormat('<mxfile><diagram /></mxfile>').name === 'drawio', 'draw.io не распознан');
+      });
+      test('detects Archi', function () {
+        const xml = '<model xmlns="http://www.archimatetool.com/archimate" identifier="m1"></model>';
+        assert(XmlDia.detectFormat(xml).name === 'archi', 'Archi не распознан');
+      });
+      test('rejects invalid XML', function () {
+        let failed = false;
+        try { XmlDia.detectFormat('<mxfile>'); } catch (error) { failed = true; }
+        assert(failed, 'Некорректный XML должен давать ошибку');
+      });
+
+      const lines = [];
+      for (const item of tests) {
+        try {
+          await item.fn();
+          lines.push('PASS ' + item.name);
+        } catch (error) {
+          lines.push('FAIL ' + item.name + ': ' + error.message);
+        }
+      }
+      result.textContent = lines.join('\n');
+      result.className = lines.some((line) => line.indexOf('FAIL') === 0) ? 'fail' : 'pass';
+    }());
+  </script>
+</body>
+</html>

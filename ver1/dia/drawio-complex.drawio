@@ -1,0 +1,15 @@
+<mxfile host="app.diagrams.net">
+  <diagram name="complex">
+    <mxGraphModel>
+      <root>
+        <mxCell id="0"/>
+        <mxCell id="1" parent="0"/>
+        <mxCell id="2" value="Клиент" vertex="1" parent="1"><mxGeometry x="80" y="80" width="120" height="60" as="geometry"/></mxCell>
+        <mxCell id="3" value="Сервис" vertex="1" parent="1"><mxGeometry x="280" y="80" width="120" height="60" as="geometry"/></mxCell>
+        <mxCell id="4" value="База данных" vertex="1" parent="1"><mxGeometry x="480" y="80" width="140" height="60" as="geometry"/></mxCell>
+        <mxCell id="5" value="Запрос" edge="1" parent="1" source="2" target="3"><mxGeometry relative="1" as="geometry"/></mxCell>
+        <mxCell id="6" value="Сохранение" edge="1" parent="1" source="3" target="4"><mxGeometry relative="1" as="geometry"/></mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>
