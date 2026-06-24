@@ -1,0 +1,52 @@
+<mxfile host="app.diagrams.net">
+  <diagram name="complex2">
+    <mxGraphModel>
+      <root>
+        <mxCell id="0"/>
+        <mxCell id="1" parent="0"/>
+        <mxCell id="client" value="Клиент" style="rounded=1;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="80" y="120" width="130" height="60" as="geometry"/>
+        </mxCell>
+        <mxCell id="gateway" value="Тип запроса?" style="rhombus;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="270" y="105" width="90" height="90" as="geometry"/>
+        </mxCell>
+        <mxCell id="service" value="Сервис" style="rounded=1;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="430" y="70" width="130" height="60" as="geometry"/>
+        </mxCell>
+        <mxCell id="operator" value="Оператор" style="rounded=1;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="430" y="180" width="130" height="60" as="geometry"/>
+        </mxCell>
+        <mxCell id="queue" value="Очередь" style="shape=cylinder3d;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="630" y="70" width="130" height="70" as="geometry"/>
+        </mxCell>
+        <mxCell id="database" value="База данных" style="shape=cylinder;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="630" y="180" width="140" height="70" as="geometry"/>
+        </mxCell>
+        <mxCell id="notify" value="Уведомление" style="rounded=1;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="840" y="120" width="140" height="60" as="geometry"/>
+        </mxCell>
+        <mxCell id="flow-client-gateway" value="заявка" style="endArrow=block;html=1;rounded=0;" edge="1" parent="1" source="client" target="gateway">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="flow-gateway-service" value="авто" style="endArrow=block;html=1;rounded=0;" edge="1" parent="1" source="gateway" target="service">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="flow-gateway-operator" value="ручной" style="endArrow=block;html=1;rounded=0;" edge="1" parent="1" source="gateway" target="operator">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="flow-service-queue" value="событие" style="endArrow=block;html=1;rounded=0;" edge="1" parent="1" source="service" target="queue">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="flow-operator-db" value="запись" style="endArrow=block;html=1;rounded=0;" edge="1" parent="1" source="operator" target="database">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="flow-queue-notify" value="готово" style="endArrow=block;html=1;rounded=0;" edge="1" parent="1" source="queue" target="notify">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="flow-db-notify" value="статус" style="endArrow=block;html=1;rounded=0;" edge="1" parent="1" source="database" target="notify">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>

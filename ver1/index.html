@@ -4,11 +4,11 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>xml-dia viewer</title>
-  <link rel="stylesheet" href="styles.css">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/codemirror@5.65.16/lib/codemirror.min.css">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/codemirror@5.65.16/addon/dialog/dialog.min.css">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/codemirror@5.65.16/addon/search/matchesonscrollbar.min.css">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bpmn-js@17.11.1/dist/assets/bpmn-js.css">
+  <link rel="stylesheet" href="styles.css">
 </head>
 <body>
   <header class="topbar">
@@ -32,11 +32,22 @@
     <button id="externalViewerButton">Внешний viewer</button>
   </header>
 
-  <main class="workspace">
-    <section class="editor-pane" aria-label="XML редактор">
+  <main id="workspace" class="workspace">
+    <section class="editor-pane" aria-labelledby="editorPaneTitle">
+      <div class="pane-titlebar">
+        <span id="editorPaneTitle">XML редактор</span>
+        <div class="pane-actions">
+          <button id="undoButton" type="button" title="Отменить изменение" aria-label="Отменить изменение">↶</button>
+          <button id="redoButton" type="button" title="Повторить изменение" aria-label="Повторить изменение">↷</button>
+        </div>
+      </div>
       <textarea id="xmlEditor"></textarea>
     </section>
-    <section class="diagram-pane" aria-label="Диаграмма">
+    <div id="workspaceSplitter" class="splitter splitter-vertical" role="separator" aria-label="Размер редактора и схемы" aria-orientation="vertical" tabindex="0"></div>
+    <section class="diagram-pane" aria-labelledby="diagramPaneTitle">
+      <div class="pane-titlebar">
+        <span id="diagramPaneTitle">Схема</span>
+      </div>
       <div class="diagram-toolbar">
         <button id="zoomOutButton">-</button>
         <button id="zoomResetButton">100%</button>
@@ -51,10 +62,14 @@
     </section>
   </main>
 
+  <div id="logSplitter" class="splitter splitter-horizontal" role="separator" aria-label="Размер рабочей области и лога" aria-orientation="horizontal" tabindex="0"></div>
+
   <footer class="log-pane" aria-label="Лог">
     <div class="log-title">Лог операций</div>
     <pre id="logOutput"></pre>
   </footer>
+
+  <div id="diagramContextMenu" class="context-menu" hidden></div>
 
   <script src="https://cdn.jsdelivr.net/npm/codemirror@5.65.16/lib/codemirror.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/codemirror@5.65.16/mode/xml/xml.min.js"></script>

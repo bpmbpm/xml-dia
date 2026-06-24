@@ -2,5 +2,7 @@
 <model xmlns="http://www.archimatetool.com/archimate" identifier="model-simple" name="Простой Archi">
   <folder name="Business">
     <element identifier="business-actor-1" name="Пользователь" xsi:type="BusinessActor" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"/>
+    <element identifier="business-process-1" name="Оформить запрос" xsi:type="BusinessProcess" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"/>
+    <relationship identifier="business-rel-1" source="business-actor-1" target="business-process-1" name="инициирует" xsi:type="AssignmentRelationship" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"/>
   </folder>
 </model>
