@@ -1,0 +1,68 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>xml-dia viewer</title>
+  <link rel="stylesheet" href="styles.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/codemirror@5.65.16/lib/codemirror.min.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/codemirror@5.65.16/addon/dialog/dialog.min.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/codemirror@5.65.16/addon/search/matchesonscrollbar.min.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bpmn-js@17.11.1/dist/assets/bpmn-js.css">
+</head>
+<body>
+  <header class="topbar">
+    <div class="brand">xml-dia</div>
+    <select id="exampleSelect" title="Пример XML"></select>
+    <label class="file-button">
+      Открыть XML
+      <input id="fileInput" type="file" accept=".xml,.bpmn,.drawio,.archimate,.archi">
+    </label>
+    <button id="renderButton">dia</button>
+    <button id="saveXmlButton">Сохранить XML</button>
+    <button id="copyUrlButton">Сохранить url</button>
+    <button id="exportSvgButton">SVG</button>
+    <button id="exportPngButton">PNG</button>
+    <button id="exportPdfButton">PDF</button>
+    <select id="externalViewerSelect" title="Внешний viewer">
+      <option value="bpmn-io">bpmn.io demo</option>
+      <option value="afomi">afomi bpmn viewer</option>
+      <option value="drawio">draw.io</option>
+    </select>
+    <button id="externalViewerButton">Внешний viewer</button>
+  </header>
+
+  <main class="workspace">
+    <section class="editor-pane" aria-label="XML редактор">
+      <textarea id="xmlEditor"></textarea>
+    </section>
+    <section class="diagram-pane" aria-label="Диаграмма">
+      <div class="diagram-toolbar">
+        <button id="zoomOutButton">-</button>
+        <button id="zoomResetButton">100%</button>
+        <button id="zoomInButton">+</button>
+        <button id="fitButton">Вписать</button>
+        <button id="panLeftButton">←</button>
+        <button id="panRightButton">→</button>
+        <button id="panUpButton">↑</button>
+        <button id="panDownButton">↓</button>
+      </div>
+      <div id="diagramCanvas" class="diagram-canvas"></div>
+    </section>
+  </main>
+
+  <footer class="log-pane" aria-label="Лог">
+    <div class="log-title">Лог операций</div>
+    <pre id="logOutput"></pre>
+  </footer>
+
+  <script src="https://cdn.jsdelivr.net/npm/codemirror@5.65.16/lib/codemirror.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/codemirror@5.65.16/mode/xml/xml.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/codemirror@5.65.16/addon/dialog/dialog.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/codemirror@5.65.16/addon/search/searchcursor.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/codemirror@5.65.16/addon/search/search.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/codemirror@5.65.16/addon/search/jump-to-line.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/bpmn-js@17.11.1/dist/bpmn-viewer.production.min.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>

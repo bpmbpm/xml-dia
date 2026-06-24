@@ -1,0 +1,161 @@
+:root {
+  --bg: #f6f7f9;
+  --panel: #ffffff;
+  --line: #cfd6df;
+  --text: #1f2933;
+  --muted: #5b6876;
+  --accent: #146c94;
+  --danger: #a93131;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr) 150px;
+  background: var(--bg);
+  color: var(--text);
+  font-family: Arial, Helvetica, sans-serif;
+}
+
+.topbar,
+.diagram-toolbar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 12px;
+  background: var(--panel);
+  border-bottom: 1px solid var(--line);
+}
+
+.brand {
+  font-weight: 700;
+  margin-right: 8px;
+}
+
+button,
+select,
+.file-button {
+  min-height: 34px;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  background: #fff;
+  color: var(--text);
+  padding: 0 10px;
+  font: inherit;
+}
+
+button {
+  cursor: pointer;
+}
+
+button:hover,
+.file-button:hover {
+  border-color: var(--accent);
+}
+
+.file-button {
+  display: inline-flex;
+  align-items: center;
+  cursor: pointer;
+}
+
+.file-button input {
+  display: none;
+}
+
+.workspace {
+  min-height: 0;
+  display: grid;
+  grid-template-columns: minmax(320px, 42%) minmax(360px, 1fr);
+}
+
+.editor-pane,
+.diagram-pane {
+  min-width: 0;
+  min-height: 0;
+}
+
+.editor-pane {
+  border-right: 1px solid var(--line);
+  background: var(--panel);
+}
+
+.CodeMirror {
+  height: 100%;
+  font-size: 14px;
+}
+
+.diagram-pane {
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr);
+  background: #eef2f5;
+}
+
+.diagram-toolbar {
+  padding: 8px;
+}
+
+.diagram-canvas {
+  min-height: 0;
+  overflow: hidden;
+  background: #fff;
+}
+
+.log-pane {
+  min-height: 0;
+  border-top: 1px solid var(--line);
+  background: #101820;
+  color: #d9e2ec;
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr);
+}
+
+.log-title {
+  padding: 8px 12px;
+  color: #f5f7fa;
+  border-bottom: 1px solid #2d3b48;
+  font-weight: 700;
+}
+
+#logOutput {
+  margin: 0;
+  padding: 10px 12px;
+  overflow: auto;
+  white-space: pre-wrap;
+  font: 13px/1.45 Consolas, monospace;
+}
+
+.fallback-diagram {
+  width: 100%;
+  min-height: 100%;
+}
+
+.error-text {
+  color: var(--danger);
+  padding: 20px;
+}
+
+@media (max-width: 900px) {
+  body {
+    grid-template-rows: auto minmax(0, 1fr) 170px;
+  }
+
+  .topbar {
+    flex-wrap: wrap;
+  }
+
+  .workspace {
+    grid-template-columns: 1fr;
+    grid-template-rows: minmax(260px, 45%) minmax(300px, 1fr);
+  }
+
+  .editor-pane {
+    border-right: 0;
+    border-bottom: 1px solid var(--line);
+  }
+}
