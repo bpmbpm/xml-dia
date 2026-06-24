@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<model xmlns="http://www.archimatetool.com/archimate" identifier="model-complex" name="Сложный Archi">
+  <folder name="Business">
+    <element identifier="actor-1" name="Клиент" xsi:type="BusinessActor" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"/>
+    <element identifier="process-1" name="Оформить заказ" xsi:type="BusinessProcess" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"/>
+  </folder>
+  <folder name="Application">
+    <element identifier="app-1" name="CRM" xsi:type="ApplicationComponent" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"/>
+  </folder>
+  <folder name="Relations">
+    <relationship identifier="rel-1" source="actor-1" target="process-1" xsi:type="AssignmentRelationship" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"/>
+    <relationship identifier="rel-2" source="process-1" target="app-1" xsi:type="ServingRelationship" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"/>
+  </folder>
+</model>

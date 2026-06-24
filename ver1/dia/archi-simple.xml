@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<model xmlns="http://www.archimatetool.com/archimate" identifier="model-simple" name="Простой Archi">
+  <folder name="Business">
+    <element identifier="business-actor-1" name="Пользователь" xsi:type="BusinessActor" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"/>
+  </folder>
+</model>
