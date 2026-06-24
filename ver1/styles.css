@@ -5,7 +5,9 @@
   --text: #1f2933;
   --muted: #5b6876;
   --accent: #146c94;
+  --selected: #0b6b2f;
   --danger: #a93131;
+  --log-height: 150px;
 }
 
 * {
@@ -16,7 +18,7 @@ body {
   margin: 0;
   min-height: 100vh;
   display: grid;
-  grid-template-rows: auto minmax(0, 1fr) 150px;
+  grid-template-rows: auto minmax(0, 1fr) 6px var(--log-height);
   background: var(--bg);
   color: var(--text);
   font-family: Arial, Helvetica, sans-serif;
@@ -71,7 +73,7 @@ button:hover,
 .workspace {
   min-height: 0;
   display: grid;
-  grid-template-columns: minmax(320px, 42%) minmax(360px, 1fr);
+  grid-template-columns: minmax(280px, var(--editor-width, 42%)) 6px minmax(320px, 1fr);
 }
 
 .editor-pane,
@@ -81,8 +83,9 @@ button:hover,
 }
 
 .editor-pane {
-  border-right: 1px solid var(--line);
   background: var(--panel);
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr);
 }
 
 .CodeMirror {
@@ -90,10 +93,43 @@ button:hover,
   font-size: 14px;
 }
 
+.editor-pane > textarea,
+.editor-pane > .CodeMirror {
+  grid-row: 2;
+  min-height: 0;
+}
+
 .diagram-pane {
   display: grid;
-  grid-template-rows: auto minmax(0, 1fr);
+  grid-template-rows: auto auto minmax(0, 1fr);
   background: #eef2f5;
+}
+
+.pane-titlebar {
+  min-height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 6px 10px;
+  background: #f8fafc;
+  border-bottom: 1px solid var(--line);
+  color: var(--text);
+  font-weight: 700;
+}
+
+.pane-actions {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.pane-actions button {
+  min-width: 32px;
+  min-height: 28px;
+  padding: 0;
+  font-size: 18px;
+  line-height: 1;
 }
 
 .diagram-toolbar {
@@ -104,6 +140,32 @@ button:hover,
   min-height: 0;
   overflow: hidden;
   background: #fff;
+}
+
+.splitter {
+  min-width: 0;
+  min-height: 0;
+  background: #d8e1ea;
+  position: relative;
+  z-index: 2;
+}
+
+.splitter:hover,
+.splitter:focus {
+  background: var(--accent);
+  outline: 0;
+}
+
+.splitter-vertical {
+  cursor: col-resize;
+}
+
+.splitter-horizontal {
+  cursor: row-resize;
+}
+
+body.is-resizing {
+  user-select: none;
 }
 
 .log-pane {
@@ -135,6 +197,101 @@ button:hover,
   min-height: 100%;
 }
 
+.diagram-element {
+  cursor: pointer;
+  outline: none;
+}
+
+.diagram-node rect {
+  fill: #ffffff;
+  stroke: var(--accent);
+  stroke-width: 2;
+}
+
+.diagram-node text {
+  fill: var(--text);
+  pointer-events: none;
+}
+
+.diagram-node text + text {
+  fill: var(--muted);
+}
+
+.diagram-node:hover rect,
+.diagram-node:focus rect,
+.diagram-node.is-selected rect {
+  stroke: var(--selected);
+  stroke-width: 3;
+}
+
+.diagram-connector-hit {
+  stroke: transparent;
+  stroke-width: 18;
+  fill: none;
+  pointer-events: stroke;
+}
+
+.diagram-connector {
+  stroke: var(--accent);
+  stroke-width: 2;
+  fill: none;
+}
+
+#diagramArrow path {
+  fill: var(--accent);
+}
+
+.diagram-edge:hover .diagram-connector,
+.diagram-edge:focus .diagram-connector,
+.diagram-edge.is-selected .diagram-connector {
+  stroke: var(--selected);
+  stroke-width: 3;
+}
+
+.djs-element.is-selected .djs-visual > :first-child {
+  stroke: var(--selected) !important;
+  stroke-width: 3px !important;
+}
+
+.context-menu {
+  position: fixed;
+  z-index: 20;
+  display: grid;
+  gap: 4px;
+  min-width: 190px;
+  padding: 6px;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  background: var(--panel);
+  box-shadow: 0 12px 28px rgba(16, 24, 32, 0.18);
+}
+
+.context-menu[hidden] {
+  display: none;
+}
+
+.context-menu button,
+.context-menu input {
+  width: 100%;
+}
+
+.context-menu button {
+  justify-content: flex-start;
+  text-align: left;
+}
+
+.context-menu input {
+  min-height: 34px;
+  border: 1px solid var(--accent);
+  border-radius: 6px;
+  padding: 0 8px;
+  font: inherit;
+}
+
+.xml-code-highlight {
+  background: rgba(255, 216, 77, 0.42);
+}
+
 .error-text {
   color: var(--danger);
   padding: 20px;
@@ -142,7 +299,7 @@ button:hover,
 
 @media (max-width: 900px) {
   body {
-    grid-template-rows: auto minmax(0, 1fr) 170px;
+    grid-template-rows: auto minmax(0, 1fr) 6px var(--log-height);
   }
 
   .topbar {
@@ -151,11 +308,14 @@ button:hover,
 
   .workspace {
     grid-template-columns: 1fr;
-    grid-template-rows: minmax(260px, 45%) minmax(300px, 1fr);
+    grid-template-rows: minmax(220px, var(--editor-height, 45%)) 6px minmax(260px, 1fr);
   }
 
   .editor-pane {
     border-right: 0;
-    border-bottom: 1px solid var(--line);
+  }
+
+  .splitter-vertical {
+    cursor: row-resize;
   }
 }

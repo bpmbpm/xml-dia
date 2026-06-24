@@ -1,0 +1,82 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:dc="http://www.omg.org/spec/DD/20100524/DC" xmlns:di="http://www.omg.org/spec/DD/20100524/DI" id="Definitions_complex2" targetNamespace="http://example.com/xml-dia">
+  <bpmn:process id="Process_complex2" isExecutable="false">
+    <bpmn:laneSet id="LaneSet_1">
+      <bpmn:lane id="Lane_Client" name="Клиент">
+        <bpmn:flowNodeRef>StartEvent_1</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_Request</bpmn:flowNodeRef>
+      </bpmn:lane>
+      <bpmn:lane id="Lane_Manager" name="Менеджер">
+        <bpmn:flowNodeRef>Gateway_Type</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_Check</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Gateway_Result</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_Clarify</bpmn:flowNodeRef>
+      </bpmn:lane>
+      <bpmn:lane id="Lane_System" name="Система">
+        <bpmn:flowNodeRef>Gateway_Parallel</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_Register</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Task_Notify</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>Gateway_Join</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>EndEvent_Approved</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>EndEvent_Rejected</bpmn:flowNodeRef>
+      </bpmn:lane>
+    </bpmn:laneSet>
+    <bpmn:startEvent id="StartEvent_1" name="Старт"/>
+    <bpmn:task id="Task_Request" name="Заполнить заявку"/>
+    <bpmn:exclusiveGateway id="Gateway_Type" name="Тип?"/>
+    <bpmn:task id="Task_Check" name="Проверить"/>
+    <bpmn:inclusiveGateway id="Gateway_Result" name="Решение?"/>
+    <bpmn:task id="Task_Clarify" name="Уточнить"/>
+    <bpmn:parallelGateway id="Gateway_Parallel" name="И"/>
+    <bpmn:task id="Task_Register" name="Зарегистрировать"/>
+    <bpmn:task id="Task_Notify" name="Уведомить"/>
+    <bpmn:parallelGateway id="Gateway_Join" name="Сборка"/>
+    <bpmn:endEvent id="EndEvent_Approved" name="Одобрено"/>
+    <bpmn:endEvent id="EndEvent_Rejected" name="Отклонено"/>
+    <bpmn:sequenceFlow id="Flow_1" sourceRef="StartEvent_1" targetRef="Task_Request"/>
+    <bpmn:sequenceFlow id="Flow_2" sourceRef="Task_Request" targetRef="Gateway_Type"/>
+    <bpmn:sequenceFlow id="Flow_3" name="обычная" sourceRef="Gateway_Type" targetRef="Task_Check"/>
+    <bpmn:sequenceFlow id="Flow_4" name="нужны данные" sourceRef="Gateway_Type" targetRef="Task_Clarify"/>
+    <bpmn:sequenceFlow id="Flow_5" sourceRef="Task_Clarify" targetRef="Task_Request"/>
+    <bpmn:sequenceFlow id="Flow_6" sourceRef="Task_Check" targetRef="Gateway_Result"/>
+    <bpmn:sequenceFlow id="Flow_7" name="одобрить" sourceRef="Gateway_Result" targetRef="Gateway_Parallel"/>
+    <bpmn:sequenceFlow id="Flow_8" name="отклонить" sourceRef="Gateway_Result" targetRef="EndEvent_Rejected"/>
+    <bpmn:sequenceFlow id="Flow_9" sourceRef="Gateway_Parallel" targetRef="Task_Register"/>
+    <bpmn:sequenceFlow id="Flow_10" sourceRef="Gateway_Parallel" targetRef="Task_Notify"/>
+    <bpmn:sequenceFlow id="Flow_11" sourceRef="Task_Register" targetRef="Gateway_Join"/>
+    <bpmn:sequenceFlow id="Flow_12" sourceRef="Task_Notify" targetRef="Gateway_Join"/>
+    <bpmn:sequenceFlow id="Flow_13" sourceRef="Gateway_Join" targetRef="EndEvent_Approved"/>
+  </bpmn:process>
+  <bpmndi:BPMNDiagram id="BPMNDiagram_complex2">
+    <bpmndi:BPMNPlane id="BPMNPlane_complex2" bpmnElement="Process_complex2">
+      <bpmndi:BPMNShape id="Lane_Client_di" bpmnElement="Lane_Client" isHorizontal="true"><dc:Bounds x="80" y="80" width="1040" height="120"/></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Lane_Manager_di" bpmnElement="Lane_Manager" isHorizontal="true"><dc:Bounds x="80" y="200" width="1040" height="120"/></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Lane_System_di" bpmnElement="Lane_System" isHorizontal="true"><dc:Bounds x="80" y="320" width="1040" height="150"/></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="StartEvent_1_di" bpmnElement="StartEvent_1"><dc:Bounds x="130" y="122" width="36" height="36"/></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_Request_di" bpmnElement="Task_Request"><dc:Bounds x="210" y="100" width="120" height="80"/></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Gateway_Type_di" bpmnElement="Gateway_Type" isMarkerVisible="true"><dc:Bounds x="380" y="215" width="50" height="50"/></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_Check_di" bpmnElement="Task_Check"><dc:Bounds x="500" y="210" width="120" height="70"/></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Gateway_Result_di" bpmnElement="Gateway_Result"><dc:Bounds x="670" y="215" width="50" height="50"/></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_Clarify_di" bpmnElement="Task_Clarify"><dc:Bounds x="500" y="100" width="120" height="70"/></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Gateway_Parallel_di" bpmnElement="Gateway_Parallel"><dc:Bounds x="790" y="370" width="50" height="50"/></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_Register_di" bpmnElement="Task_Register"><dc:Bounds x="900" y="335" width="130" height="65"/></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_Notify_di" bpmnElement="Task_Notify"><dc:Bounds x="900" y="410" width="130" height="65"/></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Gateway_Join_di" bpmnElement="Gateway_Join"><dc:Bounds x="1060" y="370" width="50" height="50"/></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="EndEvent_Approved_di" bpmnElement="EndEvent_Approved"><dc:Bounds x="1165" y="377" width="36" height="36"/></bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="EndEvent_Rejected_di" bpmnElement="EndEvent_Rejected"><dc:Bounds x="790" y="220" width="36" height="36"/></bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="Flow_1_di" bpmnElement="Flow_1"><di:waypoint x="166" y="140"/><di:waypoint x="210" y="140"/></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_2_di" bpmnElement="Flow_2"><di:waypoint x="330" y="140"/><di:waypoint x="355" y="140"/><di:waypoint x="355" y="240"/><di:waypoint x="380" y="240"/></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_3_di" bpmnElement="Flow_3"><di:waypoint x="430" y="240"/><di:waypoint x="500" y="245"/></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_4_di" bpmnElement="Flow_4"><di:waypoint x="405" y="215"/><di:waypoint x="405" y="135"/><di:waypoint x="500" y="135"/></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_5_di" bpmnElement="Flow_5"><di:waypoint x="500" y="135"/><di:waypoint x="330" y="135"/></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_6_di" bpmnElement="Flow_6"><di:waypoint x="620" y="245"/><di:waypoint x="670" y="240"/></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_7_di" bpmnElement="Flow_7"><di:waypoint x="720" y="240"/><di:waypoint x="760" y="240"/><di:waypoint x="760" y="395"/><di:waypoint x="790" y="395"/></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_8_di" bpmnElement="Flow_8"><di:waypoint x="720" y="240"/><di:waypoint x="790" y="238"/></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_9_di" bpmnElement="Flow_9"><di:waypoint x="840" y="395"/><di:waypoint x="870" y="395"/><di:waypoint x="870" y="368"/><di:waypoint x="900" y="368"/></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_10_di" bpmnElement="Flow_10"><di:waypoint x="840" y="395"/><di:waypoint x="870" y="395"/><di:waypoint x="870" y="443"/><di:waypoint x="900" y="443"/></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_11_di" bpmnElement="Flow_11"><di:waypoint x="1030" y="368"/><di:waypoint x="1060" y="395"/></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_12_di" bpmnElement="Flow_12"><di:waypoint x="1030" y="443"/><di:waypoint x="1060" y="395"/></bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_13_di" bpmnElement="Flow_13"><di:waypoint x="1110" y="395"/><di:waypoint x="1165" y="395"/></bpmndi:BPMNEdge>
+    </bpmndi:BPMNPlane>
+  </bpmndi:BPMNDiagram>
+</bpmn:definitions>

@@ -4,16 +4,21 @@
   const examples = [
     { title: 'BPMN простой', path: 'dia/bpmn-simple.bpmn' },
     { title: 'BPMN сложный', path: 'dia/bpmn-complex.bpmn' },
+    { title: 'BPMN сложный2', path: 'dia/bpmn-complex2.bpmn' },
     { title: 'draw.io простой', path: 'dia/drawio-simple.drawio' },
     { title: 'draw.io сложный', path: 'dia/drawio-complex.drawio' },
+    { title: 'draw.io сложный2', path: 'dia/drawio-complex2.drawio' },
     { title: 'Archi простой', path: 'dia/archi-simple.xml' },
-    { title: 'Archi сложный', path: 'dia/archi-complex.xml' }
+    { title: 'Archi сложный', path: 'dia/archi-complex.xml' },
+    { title: 'Archi сложный2', path: 'dia/archi-complex2.xml' }
   ];
 
   let editor;
   let bpmnViewer;
   let currentZoom = 1;
   let currentPan = { x: 0, y: 0 };
+  let currentXmlMark = null;
+  let currentContextKey = null;
 
   function byId(id) {
     return document.getElementById(id);
@@ -81,29 +86,131 @@
     bpmnViewer.get('canvas').zoom('fit-viewport');
   }
 
-  function xmlText(node, selector, fallback) {
-    const found = node.querySelector(selector);
-    return found ? (found.getAttribute('name') || found.getAttribute('identifier') || found.textContent || fallback) : fallback;
+  function stripHtml(value) {
+    return String(value || '').replace(/<[^>]*>/g, '').replace(/\s+/g, ' ').trim();
+  }
+
+  function nodeKey(node) {
+    return node.getAttribute('id') || node.getAttribute('identifier') || '';
+  }
+
+  function nodeTitle(node) {
+    return stripHtml(node.getAttribute('value') || node.getAttribute('name') || node.getAttribute('identifier') || node.getAttribute('id') || node.localName);
+  }
+
+  function nodeType(node) {
+    return node.getAttribute('xsi:type') || node.getAttributeNS('http://www.w3.org/2001/XMLSchema-instance', 'type') || node.localName;
+  }
+
+  function numberAttribute(node, name, fallback) {
+    if (!node || !node.hasAttribute(name)) {
+      return fallback;
+    }
+    const value = parseFloat(node.getAttribute(name));
+    return Number.isFinite(value) ? value : fallback;
+  }
+
+  function readDrawioGeometry(node, index) {
+    const geometry = node.querySelector('mxGeometry');
+    const gridX = 70 + (index % 4) * 260;
+    const gridY = 80 + Math.floor(index / 4) * 140;
+    return {
+      x: numberAttribute(geometry, 'x', gridX),
+      y: numberAttribute(geometry, 'y', gridY),
+      width: numberAttribute(geometry, 'width', 180),
+      height: numberAttribute(geometry, 'height', 70)
+    };
+  }
+
+  function gridGeometry(index) {
+    return {
+      x: 70 + (index % 4) * 260,
+      y: 90 + Math.floor(index / 4) * 150,
+      width: 190,
+      height: 76
+    };
+  }
+
+  function buildFallbackGraph(format, doc) {
+    let xmlNodes = [];
+    let xmlEdges = [];
+
+    if (format.name === 'drawio') {
+      xmlNodes = Array.from(doc.querySelectorAll('mxCell[vertex="1"]'));
+      xmlEdges = Array.from(doc.querySelectorAll('mxCell[edge="1"][source][target]'));
+    } else if (format.name === 'archi') {
+      xmlNodes = Array.from(doc.querySelectorAll('element'));
+      xmlEdges = Array.from(doc.querySelectorAll('relationship[source][target]'));
+    } else if (format.name === 'bpmn') {
+      xmlNodes = Array.from(doc.querySelectorAll('process > *[id], collaboration > *[id]')).filter((node) => node.localName !== 'sequenceFlow');
+      xmlEdges = Array.from(doc.querySelectorAll('sequenceFlow[sourceRef][targetRef]'));
+    } else {
+      xmlNodes = Array.from(doc.querySelectorAll('[id], [identifier]')).slice(0, 36);
+    }
+
+    const nodes = xmlNodes.slice(0, 48).map((node, index) => {
+      const geometry = format.name === 'drawio' ? readDrawioGeometry(node, index) : gridGeometry(index);
+      return {
+        key: nodeKey(node),
+        title: nodeTitle(node),
+        type: nodeType(node),
+        x: geometry.x,
+        y: geometry.y,
+        width: geometry.width,
+        height: geometry.height
+      };
+    }).filter((node) => node.key);
+
+    const nodeByKey = new Map(nodes.map((node) => [node.key, node]));
+    const edges = xmlEdges.map((edge) => {
+      const source = edge.getAttribute('source') || edge.getAttribute('sourceRef');
+      const target = edge.getAttribute('target') || edge.getAttribute('targetRef');
+      return {
+        key: nodeKey(edge),
+        title: nodeTitle(edge),
+        type: nodeType(edge),
+        source,
+        target
+      };
+    }).filter((edge) => edge.key && nodeByKey.has(edge.source) && nodeByKey.has(edge.target));
+
+    return { nodes, edges, nodeByKey };
   }
 
   function renderFallback(format, doc) {
     clearDiagram();
-    const nodes = Array.from(doc.querySelectorAll('mxCell[vertex="1"], element, relationship, folder, child')).slice(0, 36);
-    const width = 1200;
-    const height = Math.max(520, Math.ceil(nodes.length / 4) * 150 + 80);
-    const cards = nodes.map((node, index) => {
-      const x = 70 + (index % 4) * 270;
-      const y = 70 + Math.floor(index / 4) * 150;
-      const title = node.getAttribute('value') || node.getAttribute('name') || node.getAttribute('identifier') || node.getAttribute('id') || node.localName;
-      return `<g transform="translate(${x},${y})">
-        <rect width="210" height="78" rx="6" fill="#ffffff" stroke="#146c94" stroke-width="2"></rect>
-        <text x="105" y="33" text-anchor="middle" font-size="14" font-family="Arial" fill="#1f2933">${escapeHtml(title).slice(0, 34)}</text>
-        <text x="105" y="56" text-anchor="middle" font-size="12" font-family="Arial" fill="#5b6876">${escapeHtml(node.localName)}</text>
+    const graph = buildFallbackGraph(format, doc);
+    const width = Math.max(900, ...graph.nodes.map((node) => node.x + node.width + 90), 900);
+    const height = Math.max(520, ...graph.nodes.map((node) => node.y + node.height + 90), 520);
+    const connectors = graph.edges.map((edge) => {
+      const source = graph.nodeByKey.get(edge.source);
+      const target = graph.nodeByKey.get(edge.target);
+      const x1 = source.x + source.width;
+      const y1 = source.y + source.height / 2;
+      const x2 = target.x;
+      const y2 = target.y + target.height / 2;
+      const labelX = (x1 + x2) / 2;
+      const labelY = (y1 + y2) / 2 - 8;
+      return `<g class="diagram-element diagram-edge" data-xml-key="${escapeHtml(edge.key)}" role="button" tabindex="0">
+        <line class="diagram-connector-hit" x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}"></line>
+        <line class="diagram-connector" x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}" marker-end="url(#diagramArrow)"></line>
+        ${edge.title ? `<text x="${labelX}" y="${labelY}" text-anchor="middle" font-size="12" font-family="Arial" fill="#5b6876">${escapeHtml(edge.title).slice(0, 26)}</text>` : ''}
       </g>`;
     }).join('');
+    const cards = graph.nodes.map((node) => `<g class="diagram-element diagram-node" data-xml-key="${escapeHtml(node.key)}" transform="translate(${node.x},${node.y})" role="button" tabindex="0">
+        <rect width="${node.width}" height="${node.height}" rx="6"></rect>
+        <text x="${node.width / 2}" y="${Math.max(30, node.height / 2 - 5)}" text-anchor="middle" font-size="14" font-family="Arial">${escapeHtml(node.title).slice(0, 34)}</text>
+        <text x="${node.width / 2}" y="${Math.max(52, node.height / 2 + 18)}" text-anchor="middle" font-size="12" font-family="Arial">${escapeHtml(node.type).slice(0, 30)}</text>
+      </g>`).join('');
     byId('diagramCanvas').innerHTML = `<svg class="fallback-diagram" viewBox="0 0 ${width} ${height}" xmlns="http://www.w3.org/2000/svg">
+      <defs>
+        <marker id="diagramArrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+          <path d="M 0 0 L 10 5 L 0 10 z"></path>
+        </marker>
+      </defs>
       <rect width="${width}" height="${height}" fill="#f8fafc"></rect>
       <text x="40" y="38" font-size="22" font-family="Arial" fill="#1f2933">${format.label}</text>
+      ${connectors}
       ${cards || `<text x="40" y="90" font-size="16" font-family="Arial" fill="#a93131">Нет элементов для отображения</text>`}
     </svg>`;
     applySvgTransform();
@@ -117,6 +224,150 @@
       '"': '&quot;',
       "'": '&#039;'
     }[char]));
+  }
+
+  function escapeRegExp(value) {
+    return String(value).replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  }
+
+  function escapeXmlAttribute(value) {
+    return String(value).replace(/[&<>"']/g, (char) => ({
+      '&': '&amp;',
+      '<': '&lt;',
+      '>': '&gt;',
+      '"': '&quot;',
+      "'": '&apos;'
+    }[char]));
+  }
+
+  function cssValue(value) {
+    if (window.CSS && window.CSS.escape) {
+      return window.CSS.escape(value);
+    }
+    return String(value).replace(/["\\]/g, '\\$&');
+  }
+
+  function findXmlElementRange(xml, key) {
+    const attrPattern = new RegExp(`\\b(?:id|identifier)\\s*=\\s*(['"])${escapeRegExp(key)}\\1`, 'g');
+    let match = attrPattern.exec(xml);
+    while (match) {
+      const start = xml.lastIndexOf('<', match.index);
+      const tagEnd = xml.indexOf('>', match.index);
+      if (start !== -1 && tagEnd !== -1 && xml[start + 1] !== '/') {
+        const openTag = xml.slice(start, tagEnd + 1);
+        const tagNameMatch = openTag.match(/^<\s*([^\s/>]+)/);
+        if (tagNameMatch) {
+          const tagName = tagNameMatch[1];
+          let end = tagEnd + 1;
+          if (!/\/\s*>$/.test(openTag)) {
+            const closePattern = new RegExp(`</\\s*${escapeRegExp(tagName)}\\s*>`, 'i');
+            const closeMatch = closePattern.exec(xml.slice(tagEnd + 1));
+            if (closeMatch) {
+              end = tagEnd + 1 + closeMatch.index + closeMatch[0].length;
+            }
+          }
+          return { start, end };
+        }
+      }
+      match = attrPattern.exec(xml);
+    }
+    return null;
+  }
+
+  function findXmlElementNode(doc, key) {
+    return Array.from(doc.getElementsByTagName('*')).find((node) => node.getAttribute('id') === key || node.getAttribute('identifier') === key) || null;
+  }
+
+  function labelAttributeName(node) {
+    if (node.localName === 'mxCell') {
+      return 'value';
+    }
+    if (node.hasAttribute('value') && !node.hasAttribute('name')) {
+      return 'value';
+    }
+    return 'name';
+  }
+
+  function renameXmlLabel(xml, key, label) {
+    const doc = parseXml(xml);
+    const node = findXmlElementNode(doc, key);
+    if (!node) {
+      throw new Error(`Элемент ${key} не найден в XML.`);
+    }
+    const range = findXmlElementRange(xml, key);
+    if (!range) {
+      throw new Error(`Блок XML для ${key} не найден.`);
+    }
+    const attrName = labelAttributeName(node);
+    const tagEnd = xml.indexOf('>', range.start);
+    const openTag = xml.slice(range.start, tagEnd + 1);
+    const escapedLabel = escapeXmlAttribute(label);
+    const attrPattern = new RegExp(`(\\s${escapeRegExp(attrName)}\\s*=\\s*)(['"])([\\s\\S]*?)\\2`);
+    let nextOpenTag;
+    if (attrPattern.test(openTag)) {
+      nextOpenTag = openTag.replace(attrPattern, (full, prefix) => `${prefix}"${escapedLabel}"`);
+    } else if (/\/\s*>$/.test(openTag)) {
+      nextOpenTag = openTag.replace(/\s*\/>$/, ` ${attrName}="${escapedLabel}"/>`);
+    } else {
+      nextOpenTag = openTag.replace(/\s*>$/, ` ${attrName}="${escapedLabel}">`);
+    }
+    return xml.slice(0, range.start) + nextOpenTag + xml.slice(tagEnd + 1);
+  }
+
+  function indexToEditorPos(text, index) {
+    const lines = text.slice(0, index).split('\n');
+    return {
+      line: lines.length - 1,
+      ch: lines[lines.length - 1].length
+    };
+  }
+
+  function highlightXmlRange(range) {
+    const xml = getXml();
+    if (currentXmlMark) {
+      currentXmlMark.clear();
+      currentXmlMark = null;
+    }
+    if (editor) {
+      const from = indexToEditorPos(xml, range.start);
+      const to = indexToEditorPos(xml, range.end);
+      editor.focus();
+      editor.setSelection(from, to);
+      editor.scrollIntoView({ from, to }, 80);
+      currentXmlMark = editor.markText(from, to, { className: 'xml-code-highlight' });
+      return;
+    }
+    const textarea = byId('xmlEditor');
+    textarea.focus();
+    textarea.setSelectionRange(range.start, range.end);
+  }
+
+  function selectedLabelForKey(key) {
+    try {
+      const node = findXmlElementNode(parseXml(getXml()), key);
+      return node ? nodeTitle(node) : '';
+    } catch (error) {
+      return '';
+    }
+  }
+
+  function selectDiagramElement(key) {
+    const canvas = byId('diagramCanvas');
+    canvas.querySelectorAll('.is-selected').forEach((node) => node.classList.remove('is-selected'));
+    const escaped = cssValue(key);
+    canvas.querySelectorAll(`[data-xml-key="${escaped}"], [data-element-id="${escaped}"]`).forEach((node) => node.classList.add('is-selected'));
+  }
+
+  function showXmlCodeForKey(key) {
+    const range = findXmlElementRange(getXml(), key);
+    if (!range) {
+      log(`Блок XML для элемента ${key} не найден`, 'error');
+      return false;
+    }
+    highlightXmlRange(range);
+    selectDiagramElement(key);
+    log(`Показан код элемента: ${key}`);
+    return true;
   }
 
   async function renderDiagram() {
@@ -177,11 +428,20 @@
   }
 
   async function loadExample(path) {
-    const response = await fetch(path);
-    const xml = await response.text();
-    setXml(xml);
-    log(`Загружен пример: ${path}`);
-    await renderDiagram();
+    try {
+      const response = await fetch(path);
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status} ${response.statusText}`.trim());
+      }
+      const xml = await response.text();
+      setXml(xml);
+      log(`Загружен пример: ${path}`);
+      await renderDiagram();
+      return true;
+    } catch (error) {
+      log(`Не удалось загрузить пример ${path}: ${error.message}. При запуске через file:// браузер может блокировать чтение файлов из папки dia.`, 'error');
+      return false;
+    }
   }
 
   function saveText(filename, text, type) {
@@ -256,6 +516,217 @@
     log(`Открыт внешний viewer: ${target}`);
   }
 
+  function undoEditor() {
+    if (editor) {
+      editor.undo();
+      editor.focus();
+      return;
+    }
+    byId('xmlEditor').focus();
+    document.execCommand('undo');
+  }
+
+  function redoEditor() {
+    if (editor) {
+      editor.redo();
+      editor.focus();
+      return;
+    }
+    byId('xmlEditor').focus();
+    document.execCommand('redo');
+  }
+
+  function diagramElementKeyFromEvent(event) {
+    const canvas = byId('diagramCanvas');
+    const fallbackElement = event.target.closest('[data-xml-key]');
+    if (fallbackElement && canvas.contains(fallbackElement)) {
+      return fallbackElement.getAttribute('data-xml-key');
+    }
+    const bpmnElement = event.target.closest('[data-element-id]');
+    if (bpmnElement && canvas.contains(bpmnElement)) {
+      return bpmnElement.getAttribute('data-element-id');
+    }
+    return '';
+  }
+
+  async function renameDiagramElement(key, label) {
+    try {
+      const nextXml = renameXmlLabel(getXml(), key, label);
+      setXml(nextXml);
+      log(`Название элемента ${key} изменено`);
+      await renderDiagram();
+      showXmlCodeForKey(key);
+    } catch (error) {
+      log(error.message, 'error');
+    }
+  }
+
+  function hideContextMenu() {
+    const menu = byId('diagramContextMenu');
+    menu.hidden = true;
+    menu.textContent = '';
+    currentContextKey = null;
+  }
+
+  function showRenameInput() {
+    const menu = byId('diagramContextMenu');
+    const key = currentContextKey;
+    if (!key) {
+      hideContextMenu();
+      return;
+    }
+    menu.textContent = '';
+    const input = document.createElement('input');
+    input.type = 'text';
+    input.value = selectedLabelForKey(key);
+    input.setAttribute('aria-label', 'Новое название элемента');
+    menu.appendChild(input);
+    input.focus();
+    input.select();
+    input.addEventListener('keydown', async (event) => {
+      if (event.key === 'Enter') {
+        event.preventDefault();
+        const label = input.value.trim();
+        hideContextMenu();
+        if (label) {
+          await renameDiagramElement(key, label);
+        }
+      }
+      if (event.key === 'Escape') {
+        hideContextMenu();
+      }
+    });
+  }
+
+  function openContextMenu(key, x, y) {
+    const menu = byId('diagramContextMenu');
+    currentContextKey = key;
+    menu.textContent = '';
+
+    const showCodeButton = document.createElement('button');
+    showCodeButton.type = 'button';
+    showCodeButton.textContent = 'Показать код';
+    showCodeButton.addEventListener('click', (event) => {
+      event.stopPropagation();
+      showXmlCodeForKey(key);
+      hideContextMenu();
+    });
+
+    const renameButton = document.createElement('button');
+    renameButton.type = 'button';
+    renameButton.textContent = 'Изменить название';
+    renameButton.addEventListener('click', (event) => {
+      event.stopPropagation();
+      showRenameInput();
+    });
+
+    menu.append(showCodeButton, renameButton);
+    menu.style.left = `${x}px`;
+    menu.style.top = `${y}px`;
+    menu.hidden = false;
+  }
+
+  function bindDiagramInteractions() {
+    const canvas = byId('diagramCanvas');
+    canvas.addEventListener('click', (event) => {
+      const key = diagramElementKeyFromEvent(event);
+      if (key) {
+        showXmlCodeForKey(key);
+      }
+    });
+    canvas.addEventListener('contextmenu', (event) => {
+      const key = diagramElementKeyFromEvent(event);
+      if (!key) {
+        return;
+      }
+      event.preventDefault();
+      selectDiagramElement(key);
+      openContextMenu(key, event.clientX, event.clientY);
+    });
+    canvas.addEventListener('keydown', (event) => {
+      if (event.key !== 'Enter' && event.key !== ' ') {
+        return;
+      }
+      const key = diagramElementKeyFromEvent(event);
+      if (key) {
+        event.preventDefault();
+        showXmlCodeForKey(key);
+      }
+    });
+    document.addEventListener('click', (event) => {
+      const menu = byId('diagramContextMenu');
+      if (!menu.hidden && !menu.contains(event.target)) {
+        hideContextMenu();
+      }
+    });
+    document.addEventListener('keydown', (event) => {
+      if (event.key === 'Escape') {
+        hideContextMenu();
+      }
+    });
+  }
+
+  function refreshEditor() {
+    if (editor) {
+      editor.refresh();
+    }
+  }
+
+  function clamp(value, min, max) {
+    return Math.max(min, Math.min(max, value));
+  }
+
+  function initSplitters() {
+    const workspace = byId('workspace');
+    const workspaceSplitter = byId('workspaceSplitter');
+    const logSplitter = byId('logSplitter');
+    if (!workspace || !workspaceSplitter || !logSplitter) {
+      return;
+    }
+
+    workspaceSplitter.addEventListener('pointerdown', (event) => {
+      event.preventDefault();
+      workspaceSplitter.setPointerCapture(event.pointerId);
+      document.body.classList.add('is-resizing');
+      const move = (moveEvent) => {
+        const rect = workspace.getBoundingClientRect();
+        if (window.matchMedia('(max-width: 900px)').matches) {
+          const height = clamp(moveEvent.clientY - rect.top, 220, rect.height - 260);
+          workspace.style.setProperty('--editor-height', `${height}px`);
+        } else {
+          const width = clamp(moveEvent.clientX - rect.left, 280, rect.width - 320);
+          workspace.style.setProperty('--editor-width', `${width}px`);
+        }
+        refreshEditor();
+      };
+      const up = () => {
+        document.removeEventListener('pointermove', move);
+        document.removeEventListener('pointerup', up);
+        document.body.classList.remove('is-resizing');
+      };
+      document.addEventListener('pointermove', move);
+      document.addEventListener('pointerup', up);
+    });
+
+    logSplitter.addEventListener('pointerdown', (event) => {
+      event.preventDefault();
+      logSplitter.setPointerCapture(event.pointerId);
+      document.body.classList.add('is-resizing');
+      const move = (moveEvent) => {
+        const height = clamp(window.innerHeight - moveEvent.clientY, 90, window.innerHeight - 320);
+        document.documentElement.style.setProperty('--log-height', `${height}px`);
+        refreshEditor();
+      };
+      const up = () => {
+        document.removeEventListener('pointermove', move);
+        document.removeEventListener('pointerup', up);
+        document.body.classList.remove('is-resizing');
+      };
+      document.addEventListener('pointermove', move);
+      document.addEventListener('pointerup', up);
+    });
+  }
+
   function loadFromUrl() {
     const params = new URLSearchParams(location.search);
     const encoded = params.get('xml');
@@ -293,6 +764,7 @@
 
   function initExamples() {
     const select = byId('exampleSelect');
+    select.textContent = '';
     examples.forEach((item) => {
       const option = document.createElement('option');
       option.value = item.path;
@@ -304,6 +776,8 @@
 
   function bindEvents() {
     byId('renderButton').addEventListener('click', renderDiagram);
+    byId('undoButton').addEventListener('click', undoEditor);
+    byId('redoButton').addEventListener('click', redoEditor);
     byId('saveXmlButton').addEventListener('click', () => saveText('diagram.xml', getXml(), 'application/xml'));
     byId('copyUrlButton').addEventListener('click', copyCurrentUrl);
     byId('externalViewerButton').addEventListener('click', openExternalViewer);
@@ -327,12 +801,14 @@
       log(`Файл загружен: ${file.name}`);
       renderDiagram();
     });
+    bindDiagramInteractions();
   }
 
   async function init() {
     initEditor();
     initExamples();
     bindEvents();
+    initSplitters();
     if (window.XmlDiaSkipAutoInit) {
       return;
     }
@@ -344,10 +820,15 @@
   }
 
   window.XmlDia = {
+    examples,
     detectFormat,
     parseXml,
+    renderFallback,
     renderDiagram,
     loadExample,
+    findXmlElementRange,
+    renameXmlLabel,
+    showXmlCodeForKey,
     getXml,
     setXml
   };

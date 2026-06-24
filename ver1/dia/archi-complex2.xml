@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<model xmlns="http://www.archimatetool.com/archimate" identifier="model-complex2" name="Сложный2 Archi">
+  <folder name="Business">
+    <element identifier="actor-client" name="Клиент" xsi:type="BusinessActor" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"/>
+    <element identifier="role-manager" name="Менеджер" xsi:type="BusinessRole" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"/>
+    <element identifier="process-order" name="Оформить заказ" xsi:type="BusinessProcess" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"/>
+    <element identifier="process-approve" name="Согласовать заказ" xsi:type="BusinessProcess" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"/>
+  </folder>
+  <folder name="Application">
+    <element identifier="app-portal" name="Портал" xsi:type="ApplicationComponent" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"/>
+    <element identifier="app-crm" name="CRM" xsi:type="ApplicationComponent" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"/>
+    <element identifier="app-notify" name="Сервис уведомлений" xsi:type="ApplicationComponent" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"/>
+  </folder>
+  <folder name="Technology">
+    <element identifier="node-db" name="База данных" xsi:type="Node" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"/>
+  </folder>
+  <folder name="Relations">
+    <relationship identifier="rel-client-order" source="actor-client" target="process-order" name="инициирует" xsi:type="AssignmentRelationship" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"/>
+    <relationship identifier="rel-manager-approve" source="role-manager" target="process-approve" name="выполняет" xsi:type="AssignmentRelationship" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"/>
+    <relationship identifier="rel-order-approve" source="process-order" target="process-approve" name="передает" xsi:type="TriggeringRelationship" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"/>
+    <relationship identifier="rel-order-portal" source="process-order" target="app-portal" name="использует" xsi:type="ServingRelationship" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"/>
+    <relationship identifier="rel-approve-crm" source="process-approve" target="app-crm" name="обновляет" xsi:type="AccessRelationship" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"/>
+    <relationship identifier="rel-crm-db" source="app-crm" target="node-db" name="хранит" xsi:type="CompositionRelationship" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"/>
+    <relationship identifier="rel-crm-notify" source="app-crm" target="app-notify" name="событие" xsi:type="FlowRelationship" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"/>
+    <relationship identifier="rel-notify-client" source="app-notify" target="actor-client" name="сообщает" xsi:type="ServingRelationship" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"/>
+  </folder>
+</model>

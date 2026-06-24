@@ -16,6 +16,8 @@
   <div id="diagramCanvas"></div>
   <pre id="logOutput"></pre>
   <button id="renderButton"></button>
+  <button id="undoButton"></button>
+  <button id="redoButton"></button>
   <button id="saveXmlButton"></button>
   <button id="copyUrlButton"></button>
   <button id="externalViewerButton"></button>
@@ -30,6 +32,10 @@
   <button id="panRightButton"></button>
   <button id="panUpButton"></button>
   <button id="panDownButton"></button>
+  <div id="workspace" class="workspace"></div>
+  <div id="workspaceSplitter"></div>
+  <div id="logSplitter"></div>
+  <div id="diagramContextMenu"></div>
   <select id="exampleSelect"></select>
   <select id="externalViewerSelect"><option value="bpmn-io"></option></select>
   <input id="fileInput" type="file">
@@ -57,6 +63,48 @@
         let failed = false;
         try { XmlDia.detectFormat('<mxfile>'); } catch (error) { failed = true; }
         assert(failed, 'Некорректный XML должен давать ошибку');
+      });
+      test('examples include complex2 variants', function () {
+        assert(XmlDia.examples.some((item) => item.path === 'dia/bpmn-complex2.bpmn'), 'Нет BPMN сложный2');
+        assert(XmlDia.examples.some((item) => item.path === 'dia/drawio-complex2.drawio'), 'Нет draw.io сложный2');
+        assert(XmlDia.examples.some((item) => item.path === 'dia/archi-complex2.xml'), 'Нет Archi сложный2');
+      });
+      test('fallback renderer draws draw.io connectors', function () {
+        const xml = '<mxfile><diagram><mxGraphModel><root><mxCell id="0"/><mxCell id="1" parent="0"/><mxCell id="a" value="A" vertex="1" parent="1"><mxGeometry x="10" y="20" width="80" height="40" as="geometry"/></mxCell><mxCell id="b" value="B" vertex="1" parent="1"><mxGeometry x="170" y="20" width="80" height="40" as="geometry"/></mxCell><mxCell id="e" value="flow" edge="1" source="a" target="b" parent="1"><mxGeometry relative="1" as="geometry"/></mxCell></root></mxGraphModel></diagram></mxfile>';
+        const format = XmlDia.detectFormat(xml);
+        XmlDia.renderFallback(format, format.doc);
+        assert(document.querySelector('.diagram-connector'), 'Соединитель draw.io не отрисован');
+        assert(document.querySelector('[data-xml-key="a"]'), 'Фигура draw.io не кликабельна');
+      });
+      test('finds XML element block by id', function () {
+        const xml = '<root><item id="a">one</item><item id="b">two</item></root>';
+        const range = XmlDia.findXmlElementRange(xml, 'b');
+        assert(range && xml.slice(range.start, range.end) === '<item id="b">two</item>', 'Блок XML найден неверно');
+      });
+      test('renames element label in XML', function () {
+        const xml = '<bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL"><bpmn:process id="p"><bpmn:task id="Task_1" name="Old"/></bpmn:process></bpmn:definitions>';
+        const renamed = XmlDia.renameXmlLabel(xml, 'Task_1', 'New & name');
+        assert(renamed.indexOf('name="New &amp; name"') !== -1, 'Название BPMN не обновлено и не экранировано');
+      });
+      test('loadExample logs missing file errors', async function () {
+        document.getElementById('logOutput').textContent = '';
+        const loaded = await XmlDia.loadExample('dia/missing-example.xml');
+        assert(loaded === false, 'Отсутствующий пример должен вернуть false');
+        assert(document.getElementById('logOutput').textContent.indexOf('Не удалось загрузить пример') !== -1, 'Ошибка загрузки примера не записана в лог');
+      });
+      test('loadExample logs blocked local fetch errors', async function () {
+        const originalFetch = window.fetch;
+        window.fetch = function () {
+          return Promise.reject(new TypeError('Failed to fetch'));
+        };
+        document.getElementById('logOutput').textContent = '';
+        try {
+          const loaded = await XmlDia.loadExample('dia/bpmn-simple.bpmn');
+          assert(loaded === false, 'Заблокированная загрузка должна вернуть false');
+          assert(document.getElementById('logOutput').textContent.indexOf('file://') !== -1, 'Подсказка про file:// не записана в лог');
+        } finally {
+          window.fetch = originalFetch;
+        }
       });
       test('root page opens current app version', async function () {
         const response = await fetch('../../index.html', { cache: 'no-store' });
